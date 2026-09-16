@@ -2,6 +2,7 @@ const API_URL = "https://jsonplaceholder.typicode.com/todos";
 
 const todoContainer = document.getElementById("todo-container");
 
+
 // Fetch todos from API
 async function fetchTodos() {
     todoContainer.innerHTML = '<p class="loading">Loading todos...</p>';
@@ -24,7 +25,7 @@ async function fetchTodos() {
 }
 
 
-// Render todo cards
+// Render all todos
 function renderTodos(todos) {
     todoContainer.innerHTML = "";
 
@@ -35,7 +36,7 @@ function renderTodos(todos) {
 }
 
 
-// Create a single todo card
+// Create a todo card
 function createTodoCard(todo) {
     const card = document.createElement("div");
 
@@ -51,7 +52,10 @@ function createTodoCard(todo) {
         ? "Status: Completed"
         : "Status: Pending";
 
+
+    // Delete button
     const deleteButton = document.createElement("button");
+
     deleteButton.className = "delete-btn";
     deleteButton.textContent = "Delete";
 
@@ -59,8 +63,21 @@ function createTodoCard(todo) {
         deleteTodo(todo.id, card);
     });
 
+
+    // Toggle status button
+    const toggleButton = document.createElement("button");
+
+    toggleButton.className = "toggle-btn";
+    toggleButton.textContent = "Toggle Status";
+
+    toggleButton.addEventListener("click", () => {
+        toggleTodoStatus(todo, status);
+    });
+
+
     card.appendChild(title);
     card.appendChild(status);
+    card.appendChild(toggleButton);
     card.appendChild(deleteButton);
 
     return card;
@@ -78,12 +95,54 @@ async function deleteTodo(todoId, card) {
             throw new Error("Delete request failed");
         }
 
-        // Remove card immediately after successful response
         card.remove();
 
     } catch (error) {
         alert("Failed to delete todo.");
         console.error(error);
+    }
+}
+
+
+// Toggle todo status
+async function toggleTodoStatus(todo, statusElement) {
+
+    const newStatus = !todo.completed;
+
+    try {
+
+        const response = await fetch(`${API_URL}/${todo.id}`, {
+            method: "PATCH",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                completed: newStatus
+            })
+        });
+
+
+        if (!response.ok) {
+            throw new Error("Status update failed");
+        }
+
+
+        // Update local state
+        todo.completed = newStatus;
+
+
+        // Update UI
+        statusElement.textContent = todo.completed
+            ? "Status: Completed"
+            : "Status: Pending";
+
+    } catch (error) {
+
+        alert("Failed to update todo status.");
+        console.error(error);
+
     }
 }
 
